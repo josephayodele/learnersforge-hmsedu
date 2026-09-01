@@ -1,37 +1,43 @@
 ---
-# cPanel "Git Version Control" deployment manifest — Bluehost (user rgabfmmy).
+# cPanel "Git Version Control" deployment manifest — HMSEDU instance (Bluehost).
 # $HOME resolves to the account home (e.g. /home1/rgabfmmy), so paths are portable.
+#
+# Same-origin layout (no separate api subdomain, no CORS):
+#   • App  → portal.hmsedu.ng            Document Root: <HOME>/hmsedu-portal
+#   • API  → portal.hmsedu.ng/api/...    served via a symlink to the backend below.
 #
 # IMPORTANT: files are ONLY copied when you click "Deploy HEAD Commit" in
 #   cPanel → Git Version Control → Manage → Pull or Deploy.
-#   Cloning / "Update from Remote" alone does NOT run these tasks.
 #
 # ONE-TIME SERVER SETUP:
-#   1. Subdomain api.sjacedu.ng  →  Document Root: <HOME>/learnersforge-api/public
-#   2. MultiPHP Manager → set api.sjacedu.ng to PHP 8.x
-#   3. Create <HOME>/learnersforge-api/config/database.php from
-#      config/database.php.example with the real DB credentials (git-ignored,
-#      never overwritten by a deploy).
+#   1. Subdomain portal.hmsedu.ng  →  Document Root: <HOME>/hmsedu-portal
+#   2. MultiPHP Manager → set portal.hmsedu.ng to PHP 8.x (it now runs the API via /api)
+#   3. After the first deploy, create <HOME>/hmsedu-api/config/database.php and
+#      <HOME>/hmsedu-api/config/ai.php with real values (git-ignored; the deploy
+#      ships only the .example files and never overwrites your real config).
 deployment:
   tasks:
-    - /bin/echo "== Deploying LearnersForge API to $HOME/learnersforge-api =="
-    - /bin/mkdir -p "$HOME/learnersforge-api/app"
-    - /bin/mkdir -p "$HOME/learnersforge-api/database"
-    - /bin/mkdir -p "$HOME/learnersforge-api/public"
-    - /bin/mkdir -p "$HOME/learnersforge-api/config"
-    # Copy directory CONTENTS (trailing /. includes hidden files like .htaccess and
-    # avoids nesting public inside the existing public docroot).
-    - /bin/cp -R backend/app/.      "$HOME/learnersforge-api/app/"
-    - /bin/cp -R backend/database/. "$HOME/learnersforge-api/database/"
-    - /bin/cp -R backend/public/.   "$HOME/learnersforge-api/public/"
-    # -n = no-clobber: ships database.php.example without overwriting your real config.
-    - /bin/cp -Rn backend/config/.  "$HOME/learnersforge-api/config/"
-    - /bin/echo "== Docroot now contains: =="
-    - /bin/ls -la "$HOME/learnersforge-api/public"
+    # ── Backend (PHP API) → kept OUTSIDE the web root at <HOME>/hmsedu-api ──
+    - /bin/echo "== Deploying HMSEDU API to $HOME/hmsedu-api (outside docroot) =="
+    - /bin/mkdir -p "$HOME/hmsedu-api/app"
+    - /bin/mkdir -p "$HOME/hmsedu-api/database"
+    - /bin/mkdir -p "$HOME/hmsedu-api/public"
+    - /bin/mkdir -p "$HOME/hmsedu-api/config"
+    - /bin/cp -R  backend/app/.      "$HOME/hmsedu-api/app/"
+    - /bin/cp -R  backend/database/. "$HOME/hmsedu-api/database/"
+    - /bin/cp -R  backend/public/.   "$HOME/hmsedu-api/public/"
+    # -n = no-clobber: ships database.php.example / ai.php.example without
+    # overwriting your real config on redeploys.
+    - /bin/cp -Rn backend/config/.   "$HOME/hmsedu-api/config/"
 
-    # ── Frontend (React build) → portal.sjacedu.ng ──
-    # Create subdomain portal.sjacedu.ng with Document Root: <HOME>/portal-app
-    - /bin/echo "== Deploying frontend to $HOME/portal-app =="
-    - /bin/mkdir -p "$HOME/portal-app"
-    - /bin/cp -R learnersforge/dist/. "$HOME/portal-app/"
-    - /bin/ls -la "$HOME/portal-app"
+    # ── Frontend (React build) → portal.hmsedu.ng docroot ──
+    - /bin/echo "== Deploying frontend (SPA) to $HOME/hmsedu-portal =="
+    - /bin/mkdir -p "$HOME/hmsedu-portal"
+    - /bin/cp -R  learnersforge/dist/. "$HOME/hmsedu-portal/"
+
+    # ── Expose the API on the SAME origin at /api → portal.hmsedu.ng/api/v1/... ──
+    # ln -sfn is idempotent (safe to re-run every deploy). PHP resolves the real
+    # path, so app/ and config/ stay outside the web root.
+    - /bin/ln -sfn "$HOME/hmsedu-api/public" "$HOME/hmsedu-portal/api"
+    - /bin/echo "== Docroot now contains: =="
+    - /bin/ls -la "$HOME/hmsedu-portal"

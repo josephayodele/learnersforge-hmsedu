@@ -7,12 +7,13 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// Add the exact origin(s) the frontend is served from. The API lives at
-// api.sjacedu.ng; the browser app calling it must be listed here or the request
-// is blocked (credentials are allowed, so wildcard '*' cannot be used).
+// This instance serves the app and API from the SAME origin (portal.hmsedu.ng
+// with the API under /api), so the browser makes no cross-origin request and
+// this allowlist is normally never consulted. It is kept only for local dev
+// (Vite on :5173) hitting the live API, and as a safety net.
 $allowed_origins = [
     'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000',
-    'https://sjacedu.ng', 'https://www.sjacedu.ng', 'https://portal.sjacedu.ng',
+    'https://hmsedu.ng', 'https://www.hmsedu.ng', 'https://portal.hmsedu.ng',
 ];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowed_origins, true)) {
