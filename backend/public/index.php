@@ -329,8 +329,14 @@ try {
     } elseif ($path === '/api/v1/hostels' && $method === 'GET') {
         HostelController::index(authGuard());
 
+    } elseif ($path === '/api/v1/hostels' && $method === 'POST') {
+        HostelController::storeHostel(authGuard());
+
     } elseif ($path === '/api/v1/hostel/rooms' && $method === 'GET') {
         HostelController::rooms(authGuard());
+
+    } elseif ($path === '/api/v1/hostel/rooms' && $method === 'POST') {
+        HostelController::storeRoom(authGuard());
 
     } elseif ($path === '/api/v1/hostel/allocate' && $method === 'POST') {
         HostelController::allocate(authGuard());
@@ -454,6 +460,9 @@ try {
     // ── Library ───────────────────────────────────────────────────────────────
     } elseif ($path === '/api/v1/library/books' && $method === 'GET') {
         LibraryController::books(authGuard());
+
+    } elseif ($path === '/api/v1/library/books' && $method === 'POST') {
+        LibraryController::storeBook(authGuard());
 
     } elseif ($path === '/api/v1/library/loans' && $method === 'GET') {
         LibraryController::loans(authGuard());
